@@ -308,9 +308,15 @@ function render(R,view,qdesc,dt){
     <div class="vm v${v.cls==='ji'?'j':v.cls==='xiong'?'x':'z'}">${v.t}</div>
     <div class="vs">${v.s}</div>
     <div class="clash-row">
-      <div class="clash-side"><div class="clash-tg ${wxc(hWx)}">${dGZ.tg}</div><div class="clash-lbl">人・日干<br>${dWx}・${P_NAME[humanP]}</div></div>
-      <div class="clash-arr">→</div>
-      <div class="clash-side"><div class="clash-tg ${wxc(hTgWx)}">${hGZ.tg}</div><div class="clash-lbl">事・時干<br>${hTgWx}・${P_NAME[eventP]}</div></div>
+      ${(rel==='克我'||rel==='生我')?
+        `<div class="clash-side"><div class="clash-tg ${wxc(hTgWx)}">${hGZ.tg}</div><div class="clash-lbl">事・時干<br>${hTgWx}・${P_NAME[eventP]}</div></div>
+      <div class="clash-arr">${rel==='比合'?'↔':'→'}</div>
+      <div class="clash-side"><div class="clash-tg ${wxc(hWx)}">${dGZ.tg}</div><div class="clash-lbl">人・日干<br>${dWx}・${P_NAME[humanP]}</div></div>`
+        :
+        `<div class="clash-side"><div class="clash-tg ${wxc(hWx)}">${dGZ.tg}</div><div class="clash-lbl">人・日干<br>${dWx}・${P_NAME[humanP]}</div></div>
+      <div class="clash-arr">${rel==='比合'?'↔':'→'}</div>
+      <div class="clash-side"><div class="clash-tg ${wxc(hTgWx)}">${hGZ.tg}</div><div class="clash-lbl">事・時干<br>${hTgWx}・${P_NAME[eventP]}</div></div>`
+      }
     </div>
     <div style="font-size:.72rem;opacity:.75;line-height:1.6;">${v.d}</div>
   </div>`;
