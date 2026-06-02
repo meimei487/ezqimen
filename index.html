@@ -65,6 +65,11 @@ input:focus,select:focus{border-color:var(--gold);}
 .aline .k{color:var(--gold2);font-family:'Noto Serif TC',serif;}
 hr.dv{border:none;border-top:1px solid var(--bd);margin:8px 0;}
 .desc-item{display:flex;gap:8px;margin-bottom:7px;align-items:flex-start;}
+.ov-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.72rem;}
+.ov-row:last-child{border-bottom:none;}
+.ov-highlight{background:rgba(200,160,60,.07);border-radius:6px;padding:6px 8px;border-left:2px solid var(--gold2);}
+.ov-label{color:var(--dim);white-space:nowrap;min-width:72px;font-size:.62rem;padding-top:2px;font-family:"Noto Serif TC",serif;}
+.ov-val{display:flex;flex-wrap:wrap;align-items:center;gap:4px;flex:1;}
 .desc-badge{background:var(--red);color:#fff;font-size:.58rem;padding:2px 7px;border-radius:3px;white-space:nowrap;font-family:'Noto Serif TC',serif;margin-top:2px;flex-shrink:0;}
 .desc-badge.g{background:var(--grn);}
 .desc-badge.b{background:#2a4a8a;}
@@ -153,6 +158,7 @@ const DOOR_INFO={
   開:{field:'事業・開刀',inner:'開闊空間・辦公室',outer:'官府・辦公場所'}
 };
 const VIEW_DOORS={財:['生','傷'],情:['休'],事:['開','生','景'],人:['休','生','開'],狀態:['開','休','生'],健康:['死','驚','生'],風水:['生','死','開']};
+const VIEW_BAD_DOORS={財:['死','杜'],情:['驚','死'],事:['死','驚'],人:['死','驚'],狀態:['杜','死'],健康:['死','驚','傷'],風水:['驚','杜']};
 const WX_STAR={木:['沖','輔'],火:['英'],土:['芮','任'],金:['柱','心'],水:['蓬']};
 const STAR_INFO={蓬:'膽大好色・善投機取巧',任:'任勞任怨・踏實穩重',沖:'雷厲風行・易衝動',輔:'文質彬彬・有修養',英:'愛面子・注重名節',柱:'個性分明・叛逆',心:'能屈能伸・聰明靈巧',芮:'敏感操心・強迫症'};
 const ENV_WX={
@@ -267,7 +273,7 @@ function render(R,view,dt){
   const div=document.getElementById('result');div.style.display='block';
   const{yGZ,mGZ,dGZ,hGZ,ju,yuejian,humanP,eventP,zhishi,zp,pan}=R;
   const hWx=TG_WX[dGZ.tg],eWx=TG_WX[hGZ.tg],rel=getRel(hWx,eWx);
-  const doorInfo=DOOR_INFO[zhishi]||{},rDoors=VIEW_DOORS[view]||[];
+  const doorInfo=DOOR_INFO[zhishi]||{},rDoors=VIEW_DOORS[view]||[],rBadDoors=VIEW_BAD_DOORS[view]||[];
   let html='';
 
   // ── 盤面資訊 ──
@@ -312,6 +318,82 @@ function render(R,view,dt){
       <div class="clash-side"><div class="clash-tg ${wxc(dstWx)}">${dstTg}</div><div class="clash-lbl">${dstLbl}<br>${P_NAME[v.dst]}</div></div>
     </div>
     <div style="font-size:.72rem;opacity:.75;line-height:1.6;">${v.d}</div>
+  </div>`;
+
+  // ── 問事總覽 ──
+  const VIEW_FOCUS={
+    事:  {h:false, e:false, door:true,  rel:true,  note:'觀察整體發展走向，生剋為核心依據。'},
+    財:  {h:false, e:true,  door:true,  rel:true,  note:'事落宮象意代表財的來源與流向，關注生門・傷門是否當值。'},
+    情:  {h:true,  e:true,  door:false, rel:true,  note:'人事互動是核心，生剋強弱反映關係狀態。'},
+    人:  {h:true,  e:false, door:false, rel:false, note:'人落宮象意反映某人當下狀態與所處環境。'},
+    狀態:{h:true,  e:false, door:true,  rel:false, note:'值使門與人落宮共同揭示當下場域能量。'},
+    健康:{h:true,  e:false, door:false, rel:true,  note:'人落宮五行對應身體部位，生剋反映健康壓力方向。'},
+    風水:{h:true,  e:true,  door:false, rel:false, note:'人事落宮方位與象意是風水判斷的主要依據。'}
+  };
+  const vf=VIEW_FOCUS[view]||VIEW_FOCUS['事'];
+  const hl=(on)=>on?'ov-highlight':'';
+  const doorMatch=rDoors.includes(zhishi);
+  const hEnv0=ENV_WX[hWx]||{},eEnv0=ENV_WX[eWx]||{};
+
+  html+=`<div class="card"><div class="card-t">問事總覽</div>
+    <div style="font-size:.62rem;color:var(--gold2);margin-bottom:10px;padding:4px 8px;background:rgba(200,160,60,.08);border-radius:6px;border-left:2px solid var(--gold2);">
+      問「${view}」・${vf.note}
+    </div>
+    <div class="ov-row ${hl(vf.door)}">
+      <div class="ov-label">①值使門</div>
+      <div class="ov-val">
+        <span class="k">「${zhishi}門」</span>
+        <span style="color:var(--dim);font-size:.6rem;margin-left:4px;">主導：${doorInfo.field||'—'}</span>
+        ${doorMatch?`<span style="color:var(--grn2);font-size:.6rem;margin-left:6px;">✓ 與視角吻合</span>`:`<span style="color:var(--dim);font-size:.6rem;margin-left:6px;">與視角不吻合</span>`}
+      </div>
+    </div>
+    <div class="ov-row">
+      <div class="ov-label">②視角</div>
+      <div class="ov-val"><span class="k">問「${view}」</span></div>
+    </div>
+    <div class="ov-row">
+      <div class="ov-label">③關注門</div>
+      <div class="ov-val">${rDoors.map(d=>`<span class="tag" style="${d===zhishi?'color:var(--grn2);border-color:var(--grn2);':''}">${d}門</span>`).join(' ')}</div>
+    </div>
+    <div class="ov-row">
+      <div class="ov-label" style="padding-top:4px;">　有利方位</div>
+      <div class="ov-val" style="flex-direction:column;gap:2px;">
+        <div style="font-size:.6rem;">
+          ${Object.entries(pan).filter(([p,c])=>p!='5'&&rDoors.includes(c.door)).map(([p,c])=>`<span style="color:var(--grn2);">${P_DIR_S[p]}（${c.door}門）</span>`).join('・')||'<span style="color:var(--dim);">—</span>'}
+        </div>
+        <div style="font-size:.6rem;">
+          <span style="color:var(--red2);">迴避／</span>${Object.entries(pan).filter(([p,c])=>p!='5'&&rBadDoors.includes(c.door)).map(([p,c])=>`<span style="color:var(--red2);">${P_DIR_S[p]}（${c.door}門）</span>`).join('・')||'<span style="color:var(--dim);">—</span>'}
+        </div>
+      </div>
+    </div>
+    <div class="ov-row ${hl(vf.h)}">
+      <div class="ov-label">④人</div>
+      <div class="ov-val">
+        <span class="tag grn">${dGZ.tg}（${hWx}）</span>
+        <span style="color:var(--dim);font-size:.6rem;">落${P_NAME[humanP]}・${P_DIR[humanP]}</span>
+      </div>
+    </div>
+    <div class="ov-row ${hl(vf.e)}">
+      <div class="ov-label">⑤事</div>
+      <div class="ov-val">
+        <span class="tag blue">${hGZ.tg}（${eWx}）</span>
+        <span style="color:var(--dim);font-size:.6rem;">落${P_NAME[eventP]}・${P_DIR[eventP]}</span>
+      </div>
+    </div>
+    <div class="ov-row ${hl(vf.h)}">
+      <div class="ov-label">⑥人落宮象意</div>
+      <div class="ov-val" style="flex-direction:column;align-items:flex-start;gap:2px;">
+        <div style="font-size:.6rem;"><span style="color:var(--dim);">內／</span><span class="k">${hEnv0.inner||'—'}</span></div>
+        <div style="font-size:.6rem;"><span style="color:var(--dim);">外／</span><span class="k">${hEnv0.outer||'—'}</span></div>
+      </div>
+    </div>
+    <div class="ov-row ${hl(vf.e)}">
+      <div class="ov-label">⑦事落宮象意</div>
+      <div class="ov-val" style="flex-direction:column;align-items:flex-start;gap:2px;">
+        <div style="font-size:.6rem;"><span style="color:var(--dim);">內／</span><span class="k">${eEnv0.inner||'—'}</span></div>
+        <div style="font-size:.6rem;"><span style="color:var(--dim);">外／</span><span class="k">${eEnv0.outer||'—'}</span></div>
+      </div>
+    </div>
   </div>`;
 
   // ── 區塊一：五行生剋圖（天干五行固定宮位，斷吉凶）──
@@ -361,7 +443,7 @@ function render(R,view,dt){
               marker-end="url(#arr1)" stroke-dasharray="${v.cls==='zhong'?'3,2':'none'}"/>
       </svg>
     </div>
-    <div style="font-size:.63rem;margin-top:6px;color:var(--dim);">天干五行固定宮位・${v.t}（${hWx}${{生我:'生',比合:'比',我克:'克',我生:'生',克我:'克',無直接生克:''}[rel]||''}${eWx}）</div>
+    <div style="font-size:.63rem;margin-top:6px;color:var(--dim);">天干五行固定宮位・${v.t}（${{生我:`${eWx}生${hWx}`,比合:`${hWx}比${eWx}`,我克:`${hWx}克${eWx}`,我生:`${hWx}生${eWx}`,克我:`${eWx}克${hWx}`,無直接生克:'無生克'}[rel]||''}）</div>
   </div>`;
 
   // ── 區塊二：方位八門圖（落宮，提供值使門和視角參考）──
@@ -382,6 +464,7 @@ function render(R,view,dt){
           <div class="pc-name">${P_NAME[p]}</div>
           <div class="pc-door" style="font-size:.9rem;">${c.door||'—'}</div>
           <div style="font-size:.55rem;color:var(--dim);margin-top:1px;">${c.star?'天'+c.star:'—'}</div>
+          ${rDoors.includes(c.door)?`<div style="font-size:.5rem;color:var(--grn2);margin-top:1px;">▲吉</div>`:rBadDoors.includes(c.door)?`<div style="font-size:.5rem;color:var(--red2);margin-top:1px;">▼凶</div>`:''}
           ${isH?`<div style="display:inline-block;font-size:.55rem;border:1px solid var(--grn2);border-radius:999px;padding:1px 6px;color:var(--grn2);margin-top:2px;">人 ${dGZ.tg}</div>`:''}
           ${isE?`<div style="display:inline-block;font-size:.55rem;border:1px solid #8ab8e8;border-radius:999px;padding:1px 6px;color:#8ab8e8;margin-top:2px;">事 ${hGZ.tg}</div>`:''}
         </div>`;
