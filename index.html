@@ -290,8 +290,8 @@ function render(R,view,dt){
   const VM={
     生我:{cls:'ji',e:'✅',t:'事生我',s:'對我有利，有幫助，可以做。',d:`「${eWx}」生「${hWx}」，事物支持你、給予你。`,src:eventP,dst:humanP},
     比合:{cls:'ji',e:'✅',t:'事比合我',s:'進展順利，能獲得不錯的結果。',d:`「${hWx}」與「${eWx}」同行，配合默契、互助互益。`,src:humanP,dst:eventP},
-    我克:{cls:'ji',e:'⚠️',t:'人克事',s:'可有收穫，但需付出代價。',d:`「${hWx}」克「${eWx}」，你能掌控局面，但需消耗自身。`,src:humanP,dst:eventP},
-    我生:{cls:'xiong',e:'❌',t:'人生事',s:'非常辛苦，且很難看到成效。',d:`「${hWx}」生「${eWx}」，你持續滋養事物，消耗自己。`,src:humanP,dst:eventP},
+    我克:{cls:'ji',e:'✅',t:'人克事',s:'我制其事，可掌控局面，克財為得財，克官為勝訴。',d:`「${hWx}」克「${eWx}」，你主導全局，事物在你掌握之中。`,src:humanP,dst:eventP},
+    我生:{cls:'xiong',e:'⚠️',t:'人生事',s:'我洩氣於事，費力費神，需留意消耗過度。',d:`「${hWx}」生「${eWx}」，你持續付出滋養事物，耗氣洩力。`,src:humanP,dst:eventP},
     克我:{cls:'xiong',e:'❌',t:'事克人',s:'非常不好，容易人財兩空。',d:`「${eWx}」克「${hWx}」，事物制約、打壓你，對你不利。`,src:eventP,dst:humanP},
     無直接生克:{cls:'zhong',e:'⚪',t:'無直接生克',s:'局勢中性，需進一步細察。',d:`「${hWx}」與「${eWx}」無直接生克關係。`,src:humanP,dst:eventP}
   };
@@ -314,22 +314,67 @@ function render(R,view,dt){
     <div style="font-size:.72rem;opacity:.75;line-height:1.6;">${v.d}</div>
   </div>`;
 
-  // ── 九宮格（含八門 + 箭頭）──
-  const VIS=[[4,9,2],[3,5,7],[8,1,6]];
-  // 計算箭頭：從src宮到dst宮的位置
-  const srcPos=P_POS[v.src],dstPos=P_POS[v.dst];
-  // 每格寬高（百分比），間距3px忽略
+  // ── 區塊一：五行生剋圖（天干五行固定宮位，斷吉凶）──
+  const WX_FIXED_P={水:1,火:9,木:3,土:2,金:6};
+  const humanWxP=WX_FIXED_P[hWx]||humanP;
+  const eventWxP=WX_FIXED_P[eWx]||eventP;
+  const arrowSrcP=v.src===humanP?humanWxP:eventWxP;
+  const arrowDstP=v.dst===humanP?humanWxP:eventWxP;
+  const srcPos=P_POS[arrowSrcP],dstPos=P_POS[arrowDstP];
   const cellW=100/3,cellH=100/3;
   const srcCX=(srcPos[1]+0.5)*cellW,srcCY=(srcPos[0]+0.5)*cellH;
   const dstCX=(dstPos[1]+0.5)*cellW,dstCY=(dstPos[0]+0.5)*cellH;
-  // 縮短起點和終點，避免遮字
   const pad=6;
   const dx=dstCX-srcCX,dy=dstCY-srcCY,dist=Math.sqrt(dx*dx+dy*dy);
   const ux=dx/dist,uy=dy/dist;
   const x1=srcCX+ux*pad,y1=srcCY+uy*pad,x2=dstCX-ux*pad,y2=dstCY-uy*pad;
+  const arrowColor=v.cls==='ji'?'#5aba7a':v.cls==='xiong'?'#e05c4a':'#6a6080';
+  const VIS=[[4,9,2],[3,5,7],[8,1,6]];
+
+  html+=`<div class="card"><div class="card-t">五行生剋圖</div>
+    <div class="pgrid-wrap" id="pgw1">
+      <div class="palace-grid">`;
+  for(const row of VIS){
+    for(const p of row){
+      const isH=p===humanWxP,isE=p===eventWxP,isC=p===5;
+      let cls='pc';if(isH)cls+=' human';else if(isE)cls+=' event';if(isC)cls+=' center';
+      if(isC){
+        html+=`<div class="${cls}"><div class="pc-dir">中宮</div><div style="font-size:.6rem;color:var(--dim);margin-top:4px;">土</div></div>`;
+      } else {
+        const wx=P_WX[p];
+        html+=`<div class="${cls}">
+          <div class="pc-dir">${P_DIR_S[p]}</div>
+          <div class="pc-tg ${wxc(wx)}">${wx}</div>
+          ${isH?`<div style="display:inline-block;font-size:.55rem;border:1px solid var(--grn2);border-radius:999px;padding:1px 6px;color:var(--grn2);margin-top:2px;">人 ${dGZ.tg}</div>`:''}
+          ${isE?`<div style="display:inline-block;font-size:.55rem;border:1px solid #8ab8e8;border-radius:999px;padding:1px 6px;color:#8ab8e8;margin-top:2px;">事 ${hGZ.tg}</div>`:''}
+        </div>`;
+      }
+    }
+  }
+  html+=`</div>
+      <svg class="pgrid-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <defs><marker id="arr1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="${arrowColor}" opacity=".9"/>
+        </marker></defs>
+        <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+              stroke="${arrowColor}" stroke-width="1" opacity=".8"
+              marker-end="url(#arr1)" stroke-dasharray="${v.cls==='zhong'?'3,2':'none'}"/>
+      </svg>
+    </div>
+    <div style="font-size:.63rem;margin-top:6px;color:var(--dim);">天干五行固定宮位・${v.t}（${hWx}${{生我:'生',比合:'比',我克:'克',我生:'生',克我:'克',無直接生克:''}[rel]||''}${eWx}）</div>
+  </div>`;
+
+  // ── 區塊二：方位八門圖（落宮，提供值使門和視角參考）──
+  const arrowColor2=v.cls==='ji'?'#5aba7a':v.cls==='xiong'?'#e05c4a':'#6a6080';
+  const srcPos2=P_POS[v.src===humanP?humanP:eventP],dstPos2=P_POS[v.dst===humanP?humanP:eventP];
+  const srcCX2=(srcPos2[1]+0.5)*cellW,srcCY2=(srcPos2[0]+0.5)*cellH;
+  const dstCX2=(dstPos2[1]+0.5)*cellW,dstCY2=(dstPos2[0]+0.5)*cellH;
+  const dx2=dstCX2-srcCX2,dy2=dstCY2-srcCY2,dist2=Math.sqrt(dx2*dx2+dy2*dy2);
+  const ux2=dx2/dist2,uy2=dy2/dist2;
+  const x1b=srcCX2+ux2*pad,y1b=srcCY2+uy2*pad,x2b=dstCX2-ux2*pad,y2b=dstCY2-uy2*pad;
 
   html+=`<div class="card"><div class="card-t">九宮方位圖</div>
-    <div class="pgrid-wrap" id="pgw">
+    <div class="pgrid-wrap" id="pgw2">
       <div class="palace-grid">`;
   for(const row of VIS){
     for(const p of row){
@@ -339,34 +384,29 @@ function render(R,view,dt){
       if(isC){
         html+=`<div class="${cls}"><div class="pc-dir">中宮</div><div style="font-size:.6rem;color:var(--dim);margin-top:4px;">土</div></div>`;
       } else {
-        const wx=P_WX[p];
         html+=`<div class="${cls}">
           <div class="pc-dir">${P_DIR_S[p]}</div>
           <div class="pc-name">${P_NAME[p]}</div>
-          <div class="pc-tg ${wxc(wx)}">${wx}</div>
-          <div class="pc-door">${c.door||'—'}</div>
-          ${isH?`<div class="pc-marker human-m">▲人(${hWx})</div>`:isE?`<div class="pc-marker event-m">▲事(${eWx})</div>`:''}
+          <div class="pc-door" style="font-size:.9rem;">${c.door||'—'}</div>
+          ${isH?`<div style="display:inline-block;font-size:.55rem;border:1px solid var(--grn2);border-radius:999px;padding:1px 6px;color:var(--grn2);margin-top:2px;">人 ${dGZ.tg}</div>`:''}
+          ${isE?`<div style="display:inline-block;font-size:.55rem;border:1px solid #8ab8e8;border-radius:999px;padding:1px 6px;color:#8ab8e8;margin-top:2px;">事 ${hGZ.tg}</div>`:''}
         </div>`;
       }
     }
   }
-  // SVG箭頭 overlay
-  const arrowColor=v.cls==='ji'?'#5aba7a':v.cls==='xiong'?'#e05c4a':'#6a6080';
   html+=`</div>
       <svg class="pgrid-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <defs>
-          <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="${arrowColor}" opacity=".9"/>
-          </marker>
-        </defs>
-        <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-              stroke="${arrowColor}" stroke-width="1" opacity=".8"
-              marker-end="url(#arr)" stroke-dasharray="${v.cls==='zhong'?'3,2':'none'}"/>
+        <defs><marker id="arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="${arrowColor2}" opacity=".9"/>
+        </marker></defs>
+        <line x1="${x1b}" y1="${y1b}" x2="${x2b}" y2="${y2b}"
+              stroke="${arrowColor2}" stroke-width="1" opacity=".5"
+              marker-end="url(#arr2)" stroke-dasharray="3,2"/>
       </svg>
     </div>
     <div style="display:flex;gap:10px;margin-top:6px;font-size:.63rem;">
-      <span style="color:var(--grn2);">▲人（${dGZ.tg}・${hWx}）= ${P_NAME[humanP]}</span>
-      <span style="color:#8ab8e8;">▲事（${hGZ.tg}・${eWx}）= ${P_NAME[eventP]}</span>
+      <span style="color:var(--grn2);">▲人（${dGZ.tg}・${hWx}）= ${P_NAME[humanP]} ${P_DIR[humanP]}</span>
+      <span style="color:#8ab8e8;">▲事（${hGZ.tg}・${eWx}）= ${P_NAME[eventP]} ${P_DIR[eventP]}</span>
     </div>
   </div>`;
 
