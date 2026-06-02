@@ -365,13 +365,6 @@ function render(R,view,dt){
   </div>`;
 
   // ── 區塊二：方位八門圖（落宮，提供值使門和視角參考）──
-  const arrowColor2=v.cls==='ji'?'#5aba7a':v.cls==='xiong'?'#e05c4a':'#6a6080';
-  const srcPos2=P_POS[v.src===humanP?humanP:eventP],dstPos2=P_POS[v.dst===humanP?humanP:eventP];
-  const srcCX2=(srcPos2[1]+0.5)*cellW,srcCY2=(srcPos2[0]+0.5)*cellH;
-  const dstCX2=(dstPos2[1]+0.5)*cellW,dstCY2=(dstPos2[0]+0.5)*cellH;
-  const dx2=dstCX2-srcCX2,dy2=dstCY2-srcCY2,dist2=Math.sqrt(dx2*dx2+dy2*dy2);
-  const ux2=dx2/dist2,uy2=dy2/dist2;
-  const x1b=srcCX2+ux2*pad,y1b=srcCY2+uy2*pad,x2b=dstCX2-ux2*pad,y2b=dstCY2-uy2*pad;
 
   html+=`<div class="card"><div class="card-t">九宮方位圖</div>
     <div class="pgrid-wrap" id="pgw2">
@@ -388,6 +381,7 @@ function render(R,view,dt){
           <div class="pc-dir">${P_DIR_S[p]}</div>
           <div class="pc-name">${P_NAME[p]}</div>
           <div class="pc-door" style="font-size:.9rem;">${c.door||'—'}</div>
+          <div style="font-size:.55rem;color:var(--dim);margin-top:1px;">${c.star?'天'+c.star:'—'}</div>
           ${isH?`<div style="display:inline-block;font-size:.55rem;border:1px solid var(--grn2);border-radius:999px;padding:1px 6px;color:var(--grn2);margin-top:2px;">人 ${dGZ.tg}</div>`:''}
           ${isE?`<div style="display:inline-block;font-size:.55rem;border:1px solid #8ab8e8;border-radius:999px;padding:1px 6px;color:#8ab8e8;margin-top:2px;">事 ${hGZ.tg}</div>`:''}
         </div>`;
@@ -395,14 +389,6 @@ function render(R,view,dt){
     }
   }
   html+=`</div>
-      <svg class="pgrid-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <defs><marker id="arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-          <path d="M0,0 L6,3 L0,6 Z" fill="${arrowColor2}" opacity=".9"/>
-        </marker></defs>
-        <line x1="${x1b}" y1="${y1b}" x2="${x2b}" y2="${y2b}"
-              stroke="${arrowColor2}" stroke-width="1" opacity=".5"
-              marker-end="url(#arr2)" stroke-dasharray="3,2"/>
-      </svg>
     </div>
     <div style="display:flex;gap:10px;margin-top:6px;font-size:.63rem;">
       <span style="color:var(--grn2);">▲人（${dGZ.tg}・${hWx}）= ${P_NAME[humanP]} ${P_DIR[humanP]}</span>
